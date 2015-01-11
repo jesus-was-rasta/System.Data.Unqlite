@@ -21,8 +21,7 @@ namespace UnitTesting
 		[TestCleanup]
 		public void Test_DeleteDB()
 		{
-			var dir = Path.GetDirectoryName(
-				Assembly.GetExecutingAssembly().Location);
+			var dir = Path.GetDirectoryName(				Assembly.GetExecutingAssembly().Location);
 			var dbFilePath = Path.Combine(dir, databaseName);
 			if (File.Exists(dbFilePath))
 			{
