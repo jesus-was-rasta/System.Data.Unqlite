@@ -1,47 +1,61 @@
 ﻿#if !UNIX
-using System;
+
+#region Usings
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 
-// take from clr zmq
+#endregion
+
+// Taken from clrZMQ
+
 namespace System.Data.Unqlite.Interop
 {
-    internal static partial class Platform
-    {
-        public const string LibSuffix = ".dll";
+	internal static partial class Platform
+	{
+		#region Costants
+		private const string KernelLib = "kernel32";
 
-        private const string KernelLib = "kernel32";
+		public const string LibSuffix = ".dll";
+		#endregion
 
-        public static SafeLibraryHandle OpenHandle(string filename)
-        {
-            return LoadLibrary(filename);
-        }
 
-        public static IntPtr LoadProcedure(SafeLibraryHandle handle, string functionName)
-        {
-            return GetProcAddress(handle, functionName);
-        }
+		#region Public Methods
+		public static SafeLibraryHandle OpenHandle(string filename)
+		{
+			return LoadLibrary(filename);
+		}
 
-        public static bool ReleaseHandle(IntPtr handle)
-        {
-            return FreeLibrary(handle);
-        }
+		public static IntPtr LoadProcedure(SafeLibraryHandle handle, string functionName)
+		{
+			return GetProcAddress(handle, functionName);
+		}
 
-        public static Exception GetLastLibraryError()
-        {
-            return Marshal.GetExceptionForHR(Marshal.GetHRForLastWin32Error());
-        }
+		public static bool ReleaseHandle(IntPtr handle)
+		{
+			return FreeLibrary(handle);
+		}
 
-        [DllImport(KernelLib, CharSet = CharSet.Auto, BestFitMapping = false, SetLastError = true)]
-        private static extern SafeLibraryHandle LoadLibrary(string fileName);
+		public static Exception GetLastLibraryError()
+		{
+			return Marshal.GetExceptionForHR(Marshal.GetHRForLastWin32Error());
+		}
+		#endregion
 
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-        [DllImport(KernelLib, SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool FreeLibrary(IntPtr moduleHandle);
 
-        [DllImport(KernelLib)]
-        private static extern IntPtr GetProcAddress(SafeLibraryHandle moduleHandle, string procname);
-    }
+		#region Private Methods
+		[DllImport(KernelLib, CharSet = CharSet.Auto, BestFitMapping = false, SetLastError = true)]
+		private static extern SafeLibraryHandle LoadLibrary(string fileName);
+
+		[ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
+		[DllImport(KernelLib, SetLastError = true)]
+		[return : MarshalAs(UnmanagedType.Bool)]
+		private static extern bool FreeLibrary(IntPtr moduleHandle);
+
+		[DllImport(KernelLib)]
+		private static extern IntPtr GetProcAddress(SafeLibraryHandle moduleHandle, string procname);
+		#endregion
+	}
 }
+
+
 #endif

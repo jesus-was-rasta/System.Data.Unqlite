@@ -1,160 +1,181 @@
-﻿using System;
+﻿#region Usings
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
-/// Taken from clrZMQ
+
+
+#endregion
+
+
+// Taken from clrZMQ
 
 
 namespace System.Data.Unqlite.Interop
 {
-    /// <summary>
-    /// Utility class to wrap an unmanaged shared lib and be responsible for freeing it.
-    /// </summary>
-    /// <remarks>
-    /// This is a managed wrapper over the native LoadLibrary, GetProcAddress, and FreeLibrary calls on Windows
-    /// and dlopen, dlsym, and dlclose on Posix environments.
-    /// </remarks>
-    internal sealed class UnmanagedLibrary : IDisposable
-    {
-        private const string TraceCategory = "clrzmq[UnmanagedLibrary]";
+	/// <summary>
+	///     Utility class to wrap an unmanaged shared lib and be responsible for freeing it.
+	/// </summary>
+	/// <remarks>
+	///     This is a managed wrapper over the native LoadLibrary, GetProcAddress, 
+	///     and FreeLibrary calls on Windows and dlopen, dlsym, and dlclose on Posix environments.
+	/// </remarks>
+	internal sealed class UnmanagedLibrary : IDisposable
+	{
+		#region Costants
+		//private const string TraceCategory = "clrzmq[UnmanagedLibrary]";
+		private const string TraceCategory = "unqlite[UnmanagedLibrary]";
+		#endregion
 
-        private static readonly string CurrentArch = Environment.Is64BitProcess ? "x64" : "x86";
 
-        private readonly string _systemFileName;
-        private readonly string _extractedFileName;
-        private readonly SafeLibraryHandle _handle;
+		#region Fields
+		private static readonly string _currentArch = Environment.Is64BitProcess ? "x64" : "x86";
+		
+		private readonly string _extractedFileName;
+		private readonly SafeLibraryHandle _handle;
+		private readonly string _systemFileName;
+		#endregion
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="UnmanagedLibrary"/> class. Loads a dll and takes responible for freeing it.
-        /// </summary>
-        /// <remarks>Throws exceptions on failure. Most common failure would be file-not-found, that the file is not a loadable image.</remarks>
-        /// <param name="fileName">full path name of dll to load</param>
-        /// <exception cref="System.IO.FileNotFoundException">if fileName can't be found</exception>
-        public UnmanagedLibrary(string fileName)
-        {
-            if (fileName == null)
-            {
-                throw new ArgumentNullException("fileName");
-            }
 
-            if (string.IsNullOrWhiteSpace(fileName))
-            {
-                throw new ArgumentException("A valid file name is expected.", "fileName");
-            }
+		#region Constructors
+		/// <summary>
+		///     Initializes a new instance of the <see cref="UnmanagedLibrary" /> class. Loads a dll and takes responible for
+		///     freeing it.
+		/// </summary>
+		/// <remarks>
+		///     Throws exceptions on failure. Most common failure would be file-not-found, that the file is not a loadable
+		///     image.
+		/// </remarks>
+		/// <param name="fileName">full path name of dll to load</param>
+		/// <exception cref="System.IO.FileNotFoundException">if fileName can't be found</exception>
+		public UnmanagedLibrary(string fileName)
+		{
+			if (fileName == null)
+			{
+				throw new ArgumentNullException("fileName");
+			}
 
-            _systemFileName = fileName + Platform.LibSuffix;
-            _handle = LoadFromSystemPath();
+			if (string.IsNullOrWhiteSpace(fileName))
+			{
+				throw new ArgumentException("A valid file name is expected.", "fileName");
+			}
 
-            Tracer.InfoIf(_handle != null, "Loading " + _systemFileName + " from LoadLibrary system path.", TraceCategory);
+			_systemFileName = fileName + Platform.LibSuffix;
+			_handle = LoadFromSystemPath();
 
-            if (_handle == null)
-            {
-                // Ensure the correct manifest resource will always be used, even if it has already been extracted
-                _extractedFileName = fileName + "-" + CurrentArch + "-" + Assembly.GetExecutingAssembly().GetName().Version + Platform.LibSuffix;
+			Tracer.InfoIf(_handle != null, string.Format("Loading {0} from LoadLibrary system path.", _systemFileName), TraceCategory);
 
-                _handle = LoadFromAssemblyPath() ?? LoadFromExecutingPath() ?? LoadFromTempPath();
-            }
+			if (_handle == null)
+			{
+				// Ensure the correct manifest resource will always be used, even if it has already been extracted
+				_extractedFileName = string.Format("{0}-{1}-{2}{3}", fileName, _currentArch, Assembly.GetExecutingAssembly().GetName().Version, Platform.LibSuffix);
 
-            if (_handle == null || _handle.IsInvalid)
-            {
-                throw new FileNotFoundException(
-                    "Unable to find " + _systemFileName + " on system path or extract it from assembly manifest resources. Inspect Trace output for more details.",
-                    _systemFileName,
-                    Platform.GetLastLibraryError());
-            }
-        }
+				_handle = LoadFromAssemblyPath() ?? LoadFromExecutingPath() ?? LoadFromTempPath();
+			}
 
-        /// <summary>
-        /// Dynamically look up a function in the dll via kernel32!GetProcAddress or libdl!dlsym.
-        /// </summary>
-        /// <typeparam name="TDelegate">Delegate type to load</typeparam>
-        /// <param name="functionName">Raw name of the function in the export table.</param>
-        /// <returns>A delegate to the unmanaged function.</returns>
-        /// <exception cref="MissingMethodException">Thrown if the given function name is not found in the library.</exception>
-        /// <remarks>
-        /// GetProcAddress results are valid as long as the dll is not yet unloaded. This
-        /// is very very dangerous to use since you need to ensure that the dll is not unloaded
-        /// until after you're done with any objects implemented by the dll. For example, if you
-        /// get a delegate that then gets an IUnknown implemented by this dll,
-        /// you can not dispose this library until that IUnknown is collected. Else, you may free
-        /// the library and then the CLR may call release on that IUnknown and it will crash.
-        /// </remarks>
-        public TDelegate GetUnmanagedFunction<TDelegate>(string functionName) where TDelegate : class
-        {
-            IntPtr p = Platform.LoadProcedure(_handle, functionName);
+			if (_handle == null || _handle.IsInvalid)
+			{
+				throw new FileNotFoundException(
+					string.Format("Unable to find {0} on system path or extract it from assembly manifest resources. Inspect Trace output for more details.", _systemFileName),
+					_systemFileName,
+					Platform.GetLastLibraryError());
+			}
+		}
+		#endregion
 
-            if (p == IntPtr.Zero)
-            {
-                throw new MissingMethodException("Unable to find function '" + functionName + "' in dynamically loaded library.");
-            }
 
-            // Ideally, we'd just make the constraint on TDelegate be
-            // System.Delegate, but compiler error CS0702 (constrained can't be System.Delegate)
-            // prevents that. So we make the constraint system.object and do the cast from object-->TDelegate.
-            return (TDelegate)(object)Marshal.GetDelegateForFunctionPointer(p, typeof(TDelegate));
-        }
+		#region Public Methods
+		public void Dispose()
+		{
+			if (!_handle.IsClosed)
+			{
+				_handle.Close();
+			}
+		}
 
-        public void Dispose()
-        {
-            if (!_handle.IsClosed)
-            {
-                _handle.Close();
-            }
-        }
+		/// <summary>
+		///     Dynamically look up a function in the dll via kernel32!GetProcAddress or libdl!dlsym.
+		/// </summary>
+		/// <typeparam name="TDelegate">Delegate type to load</typeparam>
+		/// <param name="functionName">Raw name of the function in the export table.</param>
+		/// <returns>A delegate to the unmanaged function.</returns>
+		/// <exception cref="MissingMethodException">Thrown if the given function name is not found in the library.</exception>
+		/// <remarks>
+		///     GetProcAddress results are valid as long as the dll is not yet unloaded. This
+		///     is very very dangerous to use since you need to ensure that the dll is not unloaded
+		///     until after you're done with any objects implemented by the dll. For example, if you
+		///     get a delegate that then gets an IUnknown implemented by this dll,
+		///     you can not dispose this library until that IUnknown is collected. Else, you may free
+		///     the library and then the CLR may call release on that IUnknown and it will crash.
+		/// </remarks>
+		public TDelegate GetUnmanagedFunction<TDelegate>(string functionName) where TDelegate : class
+		{
+			IntPtr p = Platform.LoadProcedure(_handle, functionName);
 
-        private static SafeLibraryHandle NullifyInvalidHandle(SafeLibraryHandle handle)
-        {
-            return handle.IsInvalid ? null : handle;
-        }
+			if (p == IntPtr.Zero)
+			{
+				throw new MissingMethodException(string.Format("Unable to find function '{0}' in dynamically loaded library.", functionName));
+			}
 
-        private static string GetFullAssemblyPath()
-        {
-            var dir = new Uri(Assembly.GetExecutingAssembly().CodeBase);
-            var fi = new FileInfo(Uri.UnescapeDataString(dir.AbsolutePath));
-            return fi.Directory != null ? fi.Directory.FullName : null;
-        }
+			// Ideally, we'd just make the constraint on TDelegate be
+			// System.Delegate, but compiler error CS0702 (constrained can't be System.Delegate)
+			// prevents that. So we make the constraint system.object and do the cast from object-->TDelegate.
+			return (TDelegate) (object) Marshal.GetDelegateForFunctionPointer(p, typeof (TDelegate));
+		}
 
-        private SafeLibraryHandle LoadFromSystemPath()
-        {
-            return NullifyInvalidHandle(Platform.OpenHandle(_systemFileName));
-        }
+		private static SafeLibraryHandle NullifyInvalidHandle(SafeLibraryHandle handle)
+		{
+			return handle.IsInvalid ? null : handle;
+		}
 
-        private SafeLibraryHandle LoadFromAssemblyPath()
-        {
-            var assemblyPath = GetFullAssemblyPath();
+		private static string GetFullAssemblyPath()
+		{
+			var dir = new Uri(Assembly.GetExecutingAssembly().CodeBase);
+			var fi = new FileInfo(Uri.UnescapeDataString(dir.AbsolutePath));
+			return fi.Directory != null ? fi.Directory.FullName : null;
+		}
 
-            Tracer.WarningIf(assemblyPath == null, "Unable to determine full assembly path.", TraceCategory);
+		private SafeLibraryHandle LoadFromSystemPath()
+		{
+			return NullifyInvalidHandle(Platform.OpenHandle(_systemFileName));
+		}
 
-            return assemblyPath != null ? ExtractAndLoadFromPath(assemblyPath) : null;
-        }
+		private SafeLibraryHandle LoadFromAssemblyPath()
+		{
+			var assemblyPath = GetFullAssemblyPath();
 
-        private SafeLibraryHandle LoadFromExecutingPath()
-        {
-            return ExtractAndLoadFromPath(".");
-        }
+			Tracer.WarningIf(assemblyPath == null, "Unable to determine full assembly path.", TraceCategory);
 
-        private SafeLibraryHandle LoadFromTempPath()
-        {
-            var assemblyName = Assembly.GetExecutingAssembly().GetName();
-            string dir = Path.Combine(Path.GetTempPath(), assemblyName.Name + "-" + assemblyName.Version);
-            Directory.CreateDirectory(dir);
+			return assemblyPath != null ? ExtractAndLoadFromPath(assemblyPath) : null;
+		}
 
-            return ExtractAndLoadFromPath(dir);
-        }
+		private SafeLibraryHandle LoadFromExecutingPath()
+		{
+			return ExtractAndLoadFromPath(".");
+		}
 
-        private SafeLibraryHandle ExtractAndLoadFromPath(string dir)
-        {
-            string libPath = Path.GetFullPath(Path.Combine(dir, _extractedFileName));
-            string platformSuffix = "." + CurrentArch;
+		private SafeLibraryHandle LoadFromTempPath()
+		{
+			var assemblyName = Assembly.GetExecutingAssembly().GetName();
+			string dir = Path.Combine(Path.GetTempPath(), string.Format("{0}-{1}", assemblyName.Name, assemblyName.Version));
+			Directory.CreateDirectory(dir);
 
-            if (!ManifestResource.Extract(_systemFileName + platformSuffix, libPath))
-            {
-                Tracer.Warning("Unable to extract native library to " + libPath, TraceCategory);
-                return null;
-            }
+			return ExtractAndLoadFromPath(dir);
+		}
 
-            Tracer.Info("Extracted and loading " + libPath, TraceCategory);
-            return NullifyInvalidHandle(Platform.OpenHandle(libPath));
-        }
-    }
+		private SafeLibraryHandle ExtractAndLoadFromPath(string dir)
+		{
+			string libPath = Path.GetFullPath(Path.Combine(dir, _extractedFileName));
+			string platformSuffix = string.Format(".{0}", _currentArch);
+
+			if (!ManifestResource.Extract(string.Format("{0}{1}", _systemFileName, platformSuffix), libPath))
+			{
+				Tracer.Warning(string.Format("Unable to extract native library to {0}", libPath), TraceCategory);
+				return null;
+			}
+
+			Tracer.Info(string.Format("Extracted and loading {0}", libPath), TraceCategory);
+			return NullifyInvalidHandle(Platform.OpenHandle(libPath));
+		}
+		#endregion
+	}
 }

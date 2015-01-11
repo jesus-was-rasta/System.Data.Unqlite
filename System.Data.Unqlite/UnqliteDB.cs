@@ -1,78 +1,79 @@
-﻿using System;
-using System.Collections.Generic;
+﻿#region Usings
 using System.Data.Unqlite.Interop;
-using System.Linq;
-using System.Text;
+
+
+#endregion
+
 
 namespace System.Data.Unqlite
 {
-    public class UnqliteDB
-    {
-        private readonly UnqliteDBProxy dbProxy;
+	public class UnqliteDb
+	{
+		private readonly UnqliteDbProxy _dbProxy;
 
-        internal UnqliteDB(UnqliteDBProxy proxy)
-        {
-            if (proxy == null)
-            {
-                throw new ArgumentNullException("dbproxy");
-            }
-            dbProxy = proxy;
-        }
+		internal UnqliteDb(UnqliteDbProxy proxy)
+		{
+			if (proxy == null)
+			{
+				throw new ArgumentNullException("proxy");
+			}
+			_dbProxy = proxy;
+		}
 
-        public static UnqliteDB Create()
-        {
-            var proxy = new UnqliteDBProxy();
-            return new UnqliteDB(proxy);
-        }
+		public static UnqliteDb Create()
+		{
+			var proxy = new UnqliteDbProxy();
+			return new UnqliteDb(proxy);
+		}
 
-        public bool Open(string fileName, Unqlite_Open iMode)
-        {
-            return dbProxy.Open(fileName, iMode);
-        }
+		public bool Open(string fileName, UnqliteOpen iMode)
+		{
+			return _dbProxy.Open(fileName, iMode);
+		}
 
-        public bool SaveKeyValue(string Key, string Value)
-        {
-            return dbProxy.SaveKeyValue(Key, Value);
-        }
+		public bool SaveKeyValue(string key, string value)
+		{
+			return _dbProxy.SaveKeyValue(key, value);
+		}
 
-        public bool SaveKeyBinaryValue(string Key, byte[] Value)
-        {
-            return dbProxy.SaveKeyValue(Key, Value);
-        }
+		public bool SaveKeyBinaryValue(string key, byte[] value)
+		{
+			return _dbProxy.SaveKeyValue(key, value);
+		}
 
-        public string GetKeyValue(string Key)
-        {
-            return dbProxy.GetKeyValue(Key);
-        }
-        public byte[] GetKeyBinaryValue(string Key)
-        {
-            return dbProxy.GetKeyBinaryValue(Key);
-        }
+		public string GetKeyValue(string key)
+		{
+			return _dbProxy.GetKeyValue(key);
+		}
 
-        public void GetKeyValue(string Key, Action<string> action)
-        {
-            dbProxy.GetKeyValue(Key, action);
-        }
+		public byte[] GetKeyBinaryValue(string key)
+		{
+			return _dbProxy.GetKeyBinaryValue(key);
+		}
 
-        public void GetKeyBinaryValue(string Key, Action<byte[]> action)
-        {
-            dbProxy.GetKeyBinaryValue(Key, action);
-        }
+		public void GetKeyValue(string key, Action<string> action)
+		{
+			_dbProxy.GetKeyValue(key, action);
+		}
 
-        public void Close()
-        {
-            dbProxy.Close();
-        }
+		public void GetKeyBinaryValue(string key, Action<byte[]> action)
+		{
+			_dbProxy.GetKeyBinaryValue(key, action);
+		}
 
-        public KeyValueCursor CreateKeyValueCursor()
-        {
-            return new KeyValueCursor(dbProxy,true);
-        }
+		public void Close()
+		{
+			_dbProxy.Close();
+		}
 
-        public KeyValueCursor CreateReverseKeyValueCursor()
-        {
-            return new KeyValueCursor(dbProxy,false);
-        }
+		public KeyValueCursor CreateKeyValueCursor()
+		{
+			return new KeyValueCursor(_dbProxy, true);
+		}
 
-    }
+		public KeyValueCursor CreateReverseKeyValueCursor()
+		{
+			return new KeyValueCursor(_dbProxy, false);
+		}
+	}
 }

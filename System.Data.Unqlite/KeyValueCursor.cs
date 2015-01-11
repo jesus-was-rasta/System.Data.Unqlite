@@ -1,117 +1,114 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿#region Usings
+using System.Data.Unqlite.Interop;
 using System.Text;
+
+
+#endregion
+
 
 namespace System.Data.Unqlite
 {
-    public class KeyValueCursor : IDisposable
-    {
-        private Interop.UnqliteDBProxy dbProxy;
-        private IntPtr cursor;
-        public bool Open { get; set; }
-        internal KeyValueCursor(Interop.UnqliteDBProxy dbProxy, bool forwardCursor)
-        {
-            this.dbProxy = dbProxy;
-            bool success = dbProxy.InitKVCursor(out cursor);
-            if (success)
-            {
-                if (forwardCursor)
-                {
-                    success = dbProxy.KVMoveToFirstEntry(cursor);
-                }
-                else
-                {
-                    success = dbProxy.KVMoveToLastEntry(cursor);
-                }
-                Open = true;
-            }
-            else
-            {
-                Open = false;
-            }
-        }
+	public class KeyValueCursor : IDisposable
+	{
+		private readonly UnqliteDbProxy _dbProxy;
+		private IntPtr _cursor;
 
-        public void Dispose()
-        {
-            dbProxy.ReleaseCursor(cursor);
-            cursor = IntPtr.Zero;
-            Open = false;
-        }
+		internal KeyValueCursor(UnqliteDbProxy dbProxy, bool forwardCursor)
+		{
+			_dbProxy = dbProxy;
+			bool success = dbProxy.InitKVCursor(out _cursor);
+			if (success)
+			{
+				success = forwardCursor ? dbProxy.KVMoveToFirstEntry(_cursor) : dbProxy.KVMoveToLastEntry(_cursor);
+				Open = true;
+			}
+			else
+			{
+				Open = false;
+			}
+		}
 
-        public bool Read()
-        {
-            return dbProxy.KV_ValidEntry(cursor);
-        }
+		public bool Open { get; set; }
 
-        public void Prev()
-        {
-            dbProxy.KV_PrevEntry(cursor);
-        }
+		public void Dispose()
+		{
+			_dbProxy.ReleaseCursor(_cursor);
+			_cursor = IntPtr.Zero;
+			Open = false;
+		}
 
-        public void Next()
-        {
-            dbProxy.KV_NextEntry(cursor);
-        }
+		public bool Read()
+		{
+			return _dbProxy.KV_ValidEntry(_cursor);
+		}
 
-        public string GetKey()
-        {
-            byte[] keyData = dbProxy.KV_GetCurrentKey(cursor);
-            return Encoding.ASCII.GetString(keyData);
-        }
+		public void Prev()
+		{
+			_dbProxy.KV_PrevEntry(_cursor);
+		}
 
-        public byte[] GetBinaryKey()
-        {
-            return dbProxy.KV_GetCurrentKey(cursor);
-        }
+		public void Next()
+		{
+			_dbProxy.KV_NextEntry(_cursor);
+		}
 
-        public string GetValue()
-        {
-            byte[] valueData = dbProxy.KV_GetCurrentValue(cursor);
-            return Encoding.ASCII.GetString(valueData);
-        }
+		public string GetKey()
+		{
+			byte[] keyData = _dbProxy.KV_GetCurrentKey(_cursor);
+			return Encoding.ASCII.GetString(keyData);
+		}
 
-        public byte[] GetBinaryValue()
-        {
-            return dbProxy.KV_GetCurrentValue(cursor);
-        }
+		public byte[] GetBinaryKey()
+		{
+			return _dbProxy.KV_GetCurrentKey(_cursor);
+		}
 
-        public void GetStringKey(Action<string> action)
-        {
-            dbProxy.GetCursorKeyValue(cursor, action);
-        }
+		public string GetValue()
+		{
+			byte[] valueData = _dbProxy.KV_GetCurrentValue(_cursor);
+			return Encoding.ASCII.GetString(valueData);
+		}
 
-        public void GetBinaryKey(Action<byte[]> action)
-        {
-            dbProxy.GetCursorKeyValue(cursor, action);
-        }
+		public byte[] GetBinaryValue()
+		{
+			return _dbProxy.KV_GetCurrentValue(_cursor);
+		}
 
-        public void GetStringValue(Action<string> action)
-        {
-            dbProxy.GetCursorValue(cursor, action);
-        }
+		public void GetStringKey(Action<string> action)
+		{
+			_dbProxy.GetCursorKeyValue(_cursor, action);
+		}
 
-        public void GetBinaryValue(Action<byte[]> action)
-        {
-            dbProxy.GetCursorValue(cursor, action);
-        }
+		public void GetBinaryKey(Action<byte[]> action)
+		{
+			_dbProxy.GetCursorKeyValue(_cursor, action);
+		}
+
+		public void GetStringValue(Action<string> action)
+		{
+			_dbProxy.GetCursorValue(_cursor, action);
+		}
+
+		public void GetBinaryValue(Action<byte[]> action)
+		{
+			_dbProxy.GetCursorValue(_cursor, action);
+		}
 
 
-        public void Seek(string key)
-        {
-            dbProxy.SeekKey(cursor, key, Unqlite_Cursor_Seek.Match_Exact);
-        }
+		public void Seek(string key)
+		{
+			_dbProxy.SeekKey(_cursor, key, UnqliteCursorSeek.Match_Exact);
+		}
 
 
+		public void Seek(string key, UnqliteCursorSeek seekMode)
+		{
+			_dbProxy.SeekKey(_cursor, key, seekMode);
+		}
 
-        public void Seek(string key, Unqlite_Cursor_Seek seekMode)
-        {
-            dbProxy.SeekKey(cursor, key, seekMode);
-        }
-
-        public bool Delete()
-        {
-            return dbProxy.DeleteEntry(cursor);
-        }
-    }
+		public bool Delete()
+		{
+			return _dbProxy.DeleteEntry(_cursor);
+		}
+	}
 }
