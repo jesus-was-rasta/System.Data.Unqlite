@@ -88,142 +88,137 @@ namespace System.Data.Unqlite.Tests.Unit
 		}
 
 		[Test]
-		public void Test_KeyValue_BinaryStore_With_Callback()
+		public void Unqlite_KeyValue_BinaryStore_With_Callback()
 		{
-			//UnqliteDb db = UnqliteDb.Create();
-			UnqliteDb db = new UnqliteDb();
-			var res = db.Open(InMemoryDatabase, UnqliteOpenMode.CREATE);
-			if (res)
+			using (var unqliteDb = new UnqliteDb())
 			{
-				var res1 = db.SaveKeyValue("test", "hello world");
-				db.GetKeyBinaryValue("test", (value) =>
+				unqliteDb.Open(InMemoryDatabase, UnqliteOpenMode.CREATE);
+				unqliteDb.SaveKeyValue("test", "hello world");
+				unqliteDb.GetKeyBinaryValue("test", value =>
 				{
 					string strValue = Encoding.ASCII.GetString(value, 0, value.Length);
 					Assert.IsTrue(strValue == "hello world");
 				});
+			}
+		}
+
+		[Test]
+		public void Unqlite_KeyValue_Cursor()
+		{
+			using (var db = new UnqliteDb())
+			{
+				db.Open(InMemoryDatabase, UnqliteOpenMode.CREATE);
+				for (int i = 0; i < 100; i++)
+				{
+					db.SaveKeyValue("test" + (i + 1), "hello world " + (i + 1));
+				}
+				using (var cursor = db.CreateKeyValueCursor())
+				{
+					while (cursor.Read())
+					{
+						string key = cursor.GetKey();
+						byte[] binaryKey = cursor.GetBinaryKey();
+						Console.Out.WriteLine("Key:" + key);
+						string value = cursor.GetValue();
+						byte[] binaryValue = cursor.GetBinaryValue();
+						Console.Out.WriteLine("Value:" + value);
+						cursor.Next();
+					}
+				}
 				db.Close();
 			}
 		}
 
 		[Test]
-		public void Test_KeyValue_Cursor()
+		public void Unqlite_KeyValue_Cursor_with_callback()
 		{
-			//UnqliteDb db = UnqliteDb.Create();
-			UnqliteDb db = new UnqliteDb();
-			var res = db.Open(InMemoryDatabase, UnqliteOpenMode.CREATE);
-			for (int i = 0; i < 100; i++)
+			using (var unqliteDb = new UnqliteDb())
 			{
-				db.SaveKeyValue("test" + (i + 1).ToString(), "hello world " + (i + 1).ToString());
-			}
-			using (var cursor = db.CreateKeyValueCursor())
-			{
-				while (cursor.Read())
+				unqliteDb.Open(InMemoryDatabase, UnqliteOpenMode.CREATE);
+				for (int i = 0; i < 20; i++)
 				{
-					string key = cursor.GetKey();
-					byte[] binaryKey = cursor.GetBinaryKey();
-					Console.Out.WriteLine("Key:" + key);
-					string value = cursor.GetValue();
-					byte[] binaryValue = cursor.GetBinaryValue();
-					Console.Out.WriteLine("Value:" + value);
-					cursor.Next();
+					unqliteDb.SaveKeyValue("test" + (i + 1), "hello world " + (i + 1));
 				}
-			}
-			db.Close();
-		}
-
-		[Test]
-		public void Test_KeyValue_Cursor_with_callback()
-		{
-			//UnqliteDb db = UnqliteDb.Create();
-			UnqliteDb db = new UnqliteDb();
-			var res = db.Open(InMemoryDatabase, UnqliteOpenMode.CREATE);
-			for (int i = 0; i < 20; i++)
-			{
-				db.SaveKeyValue("test" + (i + 1).ToString(), "hello world " + (i + 1).ToString());
-			}
-			using (var cursor = db.CreateKeyValueCursor())
-			{
-				while (cursor.Read())
+				using (var cursor = unqliteDb.CreateKeyValueCursor())
 				{
-					cursor.GetStringKey((key) =>
+					while (cursor.Read())
 					{
-						Console.Out.WriteLine("Key:" + key);
-					});
-					cursor.GetStringValue((value) =>
+						cursor.GetStringKey(key => Console.Out.WriteLine("Key:" + key));
+						cursor.GetStringValue(value => Console.Out.WriteLine("Value:" + value));
+						cursor.Next();
+					}
+				}
+				unqliteDb.Close();
+			}
+		}
+
+		[Test]
+		public void Unqlite_KeyValue_Cursor_Seek()
+		{
+			using (var unqliteDb = new UnqliteDb())
+			{
+				unqliteDb.Open(InMemoryDatabase, UnqliteOpenMode.CREATE);
+				for (int i = 0; i < 20; i++)
+				{
+					unqliteDb.SaveKeyValue("test" + (i + 1), "hello world " + (i + 1));
+				}
+				using (var cursor = unqliteDb.CreateKeyValueCursor())
+				{
+					if (cursor.Read())
 					{
-						Console.Out.WriteLine("Value:" + value);
-					});
-					cursor.Next();
+						cursor.Seek("test1");
+						string value = cursor.GetValue();
+						Assert.IsTrue(value == "hello world 1");
+					}
 				}
+				unqliteDb.Close();
 			}
-			db.Close();
 		}
 
 		[Test]
-		public void Test_KeyValue_Cursor_Seek()
+		public void Unqlite_KeyValue_Cursor_SeekModeGE()
 		{
-			//UnqliteDb db = UnqliteDb.Create();
-			UnqliteDb db = new UnqliteDb();
-			var res = db.Open(InMemoryDatabase, UnqliteOpenMode.CREATE);
-			for (int i = 0; i < 20; i++)
+			using (var unqliteDb = new UnqliteDb())
 			{
-				db.SaveKeyValue("test" + (i + 1).ToString(), "hello world " + (i + 1).ToString());
-			}
-			using (var cursor = db.CreateKeyValueCursor())
-			{
-				if (cursor.Read())
+				unqliteDb.Open(InMemoryDatabase, UnqliteOpenMode.CREATE);
+				for (int i = 0; i < 20; i++)
 				{
-					cursor.Seek("test1");
-					string value = cursor.GetValue();
-					Assert.IsTrue(value == "hello world 1");
+					unqliteDb.SaveKeyValue("test" + (i + 1), "hello world " + (i + 1));
 				}
+				using (var cursor = unqliteDb.CreateKeyValueCursor())
+				{
+					if (cursor.Read())
+					{
+						cursor.Seek("test1", UnqliteCursorSeek.Match_GE);
+						string value = cursor.GetValue();
+						Assert.IsTrue(value == "hello world 1");
+					}
+				}
+				unqliteDb.Close();
 			}
-			db.Close();
 		}
 
 		[Test]
-		public void Test_KeyValue_Cursor_SeekModeGE()
+		public void Unqlite_KeyValue_Cursor_Seek_Delete()
 		{
-			//UnqliteDb db = UnqliteDb.Create();
-			UnqliteDb db = new UnqliteDb();
-			var res = db.Open(InMemoryDatabase, UnqliteOpenMode.CREATE);
-			for (int i = 0; i < 20; i++)
+			using (var unqliteDb = new UnqliteDb())
 			{
-				db.SaveKeyValue("test" + (i + 1).ToString(), "hello world " + (i + 1).ToString());
-			}
-			using (var cursor = db.CreateKeyValueCursor())
-			{
-				if (cursor.Read())
+				unqliteDb.Open(InMemoryDatabase, UnqliteOpenMode.CREATE);
+				for (int i = 0; i < 20; i++)
 				{
-					cursor.Seek("test1", UnqliteCursorSeek.Match_GE);
-					string value = cursor.GetValue();
-					Assert.IsTrue(value == "hello world 1");
+					unqliteDb.SaveKeyValue("test" + (i + 1), "hello world " + (i + 1));
 				}
-			}
-			db.Close();
-		}
-
-		[Test]
-		public void Test_KeyValue_Cursor_Seek_Delete()
-		{
-			//UnqliteDb db = UnqliteDb.Create();
-			UnqliteDb db = new UnqliteDb();
-			var res = db.Open(InMemoryDatabase, UnqliteOpenMode.CREATE);
-			for (int i = 0; i < 20; i++)
-			{
-				db.SaveKeyValue("test" + (i + 1).ToString(), "hello world " + (i + 1).ToString());
-			}
-			using (var cursor = db.CreateKeyValueCursor())
-			{
-				if (cursor.Read())
+				using (var cursor = unqliteDb.CreateKeyValueCursor())
 				{
-					cursor.Seek("test4", UnqliteCursorSeek.Match_GE);
-					bool deleted = cursor.Delete();
-					Assert.IsTrue(deleted);
+					if (cursor.Read())
+					{
+						cursor.Seek("test4", UnqliteCursorSeek.Match_GE);
+						bool deleted = cursor.Delete();
+						Assert.IsTrue(deleted);
+					}
 				}
+				unqliteDb.Close();
 			}
-			db.Close();
 		}
-
     }
 }
