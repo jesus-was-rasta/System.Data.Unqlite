@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
+﻿#region Usings
 using NUnit.Framework;
+#endregion
 
 
 namespace System.Data.Unqlite.Tests.Unit
@@ -65,6 +63,23 @@ namespace System.Data.Unqlite.Tests.Unit
 				unqliteDb.SaveKeyValue(testkey, testValue);
 			
 				expectedValue = unqliteDb.GetKeyValue(testkey);
+			}
+
+			Assert.IsTrue(expectedValue == testValue);
+		}
+
+		[Test]
+		public void UnqliteDb_KeyValue_Store_With_Callback()
+		{
+			const string testkey = "testKey";
+			const string testValue = "testValue";
+
+			string expectedValue = string.Empty;
+			using (var unqliteDb = new UnqliteDb())
+			{
+				unqliteDb.Open(InMemoryDatabase, UnqliteOpenMode.CREATE);
+				unqliteDb.SaveKeyValue(testkey, testValue);
+				unqliteDb.GetKeyValue(testkey, value => expectedValue = value);
 			}
 
 			Assert.IsTrue(expectedValue == testValue);
