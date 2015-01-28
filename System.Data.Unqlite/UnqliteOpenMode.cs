@@ -1,6 +1,6 @@
 ﻿namespace System.Data.Unqlite
 {
-	public enum UnqliteOpen
+	public enum UnqliteOpenMode
 	{
 		READONLY = 0x00000001, /* Read only mode. Ok for [unqlite_open] */
 		READWRITE = 0x00000002, /* Ok for [unqlite_open] */

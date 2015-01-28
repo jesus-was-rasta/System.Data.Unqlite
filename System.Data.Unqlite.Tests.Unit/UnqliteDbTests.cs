@@ -42,15 +42,33 @@ namespace System.Data.Unqlite.Tests.Unit
 		[Test]
 		public void UnqliteDb_Open_DoesNotThrowException()
 		{
-			UnqliteDb db = UnqliteDb.Create();
+			var unqliteDb = UnqliteDb.Create();
 
-			var result = db.Open(InMemoryDatabase, UnqliteOpen.CREATE);
+			var result = unqliteDb.Open(InMemoryDatabase, UnqliteOpenMode.CREATE);
 			if (result)
 			{
-				db.Close();
+				unqliteDb.Close();
 			}
 			Assert.IsTrue(result);
 		}
 		#endregion
+
+		[Test]
+		public void UnqliteDb_KeyValue_Store()
+		{
+			const string testkey = "testKey";
+			const string testValue = "testValue";
+
+			var unqliteDb = UnqliteDb.Create();
+			unqliteDb.Open(InMemoryDatabase, UnqliteOpenMode.CREATE);
+
+			unqliteDb.SaveKeyValue(testkey, testValue);
+			
+			var expectedValue = unqliteDb.GetKeyValue(testkey);
+			
+			Assert.IsTrue(expectedValue == testValue);
+
+			unqliteDb.Close();
+		}
     }
 }

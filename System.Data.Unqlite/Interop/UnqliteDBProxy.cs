@@ -21,7 +21,7 @@ namespace System.Data.Unqlite.Interop
 
 
 		#region Internal Methods
-		internal bool Open(string fileName, UnqliteOpen iMode)
+		internal bool Open(string fileName, UnqliteOpenMode iMode)
 		{
 			IntPtr handler = IntPtr.Zero;
 			int res = Libunqlite.unqlite_open(out handler, fileName, (int) iMode);
@@ -99,25 +99,6 @@ namespace System.Data.Unqlite.Interop
 		internal void Close()
 		{
 			Libunqlite.unqlite_close(DbHandle);
-		}
-
-		protected virtual void Dispose(bool disposing)
-		{
-			if (!_disposed)
-			{
-				Terminate();
-			}
-
-			_disposed = true;
-		}
-
-		private void Terminate()
-		{
-			//nando20150111: what the hell is this?
-			if (DbHandle == IntPtr.Zero)
-			{
-				return;
-			}
 		}
 
 		internal void GetKeyValue(string key, Action<string> action)
@@ -271,6 +252,25 @@ namespace System.Data.Unqlite.Interop
 
 
 		#region Dispose
+		private void Terminate()
+		{
+			//nando20150111: what the hell is this?
+			if (DbHandle == IntPtr.Zero)
+			{
+				return;
+			}
+		}
+
+		protected virtual void Dispose(bool disposing)
+		{
+			if (!_disposed)
+			{
+				Terminate();
+			}
+
+			_disposed = true;
+		}
+
 		public virtual void Dispose()
 		{
 			Dispose(true);

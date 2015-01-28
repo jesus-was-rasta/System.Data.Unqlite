@@ -9,8 +9,12 @@ namespace System.Data.Unqlite
 {
 	public class UnqliteDb
 	{
+		#region Fields
 		private readonly UnqliteDbProxy _dbProxy;
+		#endregion
 
+
+		#region Constructors
 		internal UnqliteDb(UnqliteDbProxy proxy)
 		{
 			if (proxy == null)
@@ -19,16 +23,19 @@ namespace System.Data.Unqlite
 			}
 			_dbProxy = proxy;
 		}
+		#endregion
 
+
+		#region Public Methods
 		public static UnqliteDb Create()
 		{
 			var proxy = new UnqliteDbProxy();
 			return new UnqliteDb(proxy);
 		}
 
-		public bool Open(string fileName, UnqliteOpen iMode)
+		public bool Open(string fileName, UnqliteOpenMode openMode)
 		{
-			return _dbProxy.Open(fileName, iMode);
+			return _dbProxy.Open(fileName, openMode);
 		}
 
 		public bool SaveKeyValue(string key, string value)
@@ -75,5 +82,6 @@ namespace System.Data.Unqlite
 		{
 			return new KeyValueCursor(_dbProxy, false);
 		}
+		#endregion
 	}
 }

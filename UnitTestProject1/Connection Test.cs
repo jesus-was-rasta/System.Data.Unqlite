@@ -33,7 +33,7 @@ namespace UnitTesting
 		public void Test_connection_Open_Create()
 		{
 			UnqliteDb db = UnqliteDb.Create();
-			var res = db.Open(databaseName, UnqliteOpen.CREATE);
+			var res = db.Open(databaseName, UnqliteOpenMode.CREATE);
 			if (res)
 			{
 				db.Close();
@@ -45,7 +45,7 @@ namespace UnitTesting
 		public void Test_KeyValue_Store()
 		{
 			UnqliteDb db = UnqliteDb.Create();
-			var res = db.Open(databaseName, UnqliteOpen.CREATE);
+			var res = db.Open(databaseName, UnqliteOpenMode.CREATE);
 			if (res)
 			{
 				var res1 = db.SaveKeyValue("test", "hello world");
@@ -59,7 +59,7 @@ namespace UnitTesting
 		public void Test_KeyValue_Store_With_Callback()
 		{
 			UnqliteDb db = UnqliteDb.Create();
-			var res = db.Open(databaseName, UnqliteOpen.CREATE);
+			var res = db.Open(databaseName, UnqliteOpenMode.CREATE);
 			if (res)
 			{
 				var res1 = db.SaveKeyValue("test", "hello world");
@@ -72,7 +72,7 @@ namespace UnitTesting
 		public void Test_KeyValue_BinaryStore_With_Callback()
 		{
 			UnqliteDb db = UnqliteDb.Create();
-			var res = db.Open(databaseName, UnqliteOpen.CREATE);
+			var res = db.Open(databaseName, UnqliteOpenMode.CREATE);
 			if (res)
 			{
 				var res1 = db.SaveKeyValue("test", "hello world");
@@ -89,7 +89,7 @@ namespace UnitTesting
 		public void Test_KeyValue_Cursor()
 		{
 			UnqliteDb db = UnqliteDb.Create();
-			var res = db.Open(databaseName, UnqliteOpen.CREATE);
+			var res = db.Open(databaseName, UnqliteOpenMode.CREATE);
 			for (int i = 0; i < 100; i++)
 			{
 				db.SaveKeyValue("test" + (i + 1).ToString(), "hello world " + (i + 1).ToString());
@@ -114,7 +114,7 @@ namespace UnitTesting
 		public void Test_KeyValue_Cursor_with_callback()
 		{
 			UnqliteDb db = UnqliteDb.Create();
-			var res = db.Open(databaseName, UnqliteOpen.CREATE);
+			var res = db.Open(databaseName, UnqliteOpenMode.CREATE);
 			for (int i = 0; i < 20; i++)
 			{
 				db.SaveKeyValue("test" + (i + 1).ToString(), "hello world " + (i + 1).ToString());
@@ -135,7 +135,7 @@ namespace UnitTesting
 		public void Test_KeyValue_Cursor_Seek()
 		{
 			UnqliteDb db = UnqliteDb.Create();
-			var res = db.Open(databaseName, UnqliteOpen.CREATE);
+			var res = db.Open(databaseName, UnqliteOpenMode.CREATE);
 			for (int i = 0; i < 20; i++)
 			{
 				db.SaveKeyValue("test" + (i + 1).ToString(), "hello world " + (i + 1).ToString());
@@ -156,7 +156,7 @@ namespace UnitTesting
 		public void Test_KeyValue_Cursor_SeekModeGE()
 		{
 			UnqliteDb db = UnqliteDb.Create();
-			var res = db.Open(databaseName, UnqliteOpen.CREATE);
+			var res = db.Open(databaseName, UnqliteOpenMode.CREATE);
 			for (int i = 0; i < 20; i++)
 			{
 				db.SaveKeyValue("test" + (i + 1).ToString(), "hello world " + (i + 1).ToString());
@@ -177,7 +177,7 @@ namespace UnitTesting
 		public void Test_KeyValue_Cursor_Seek_Delete()
 		{
 			UnqliteDb db = UnqliteDb.Create();
-			var res = db.Open(databaseName, UnqliteOpen.CREATE);
+			var res = db.Open(databaseName, UnqliteOpenMode.CREATE);
 			for (int i = 0; i < 20; i++)
 			{
 				db.SaveKeyValue("test" + (i + 1).ToString(), "hello world " + (i + 1).ToString());
