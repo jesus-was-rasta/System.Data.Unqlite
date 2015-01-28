@@ -42,14 +42,13 @@ namespace System.Data.Unqlite.Tests.Unit
 		[Test]
 		public void UnqliteDb_Open_DoesNotThrowException()
 		{
-			var unqliteDb = UnqliteDb.Create();
-
-			var result = unqliteDb.Open(InMemoryDatabase, UnqliteOpenMode.CREATE);
-			if (result)
+			Assert.DoesNotThrow(() =>
 			{
-				unqliteDb.Close();
-			}
-			Assert.IsTrue(result);
+				using (var unqliteDb = new UnqliteDb())
+				{
+					unqliteDb.Open(InMemoryDatabase, UnqliteOpenMode.CREATE);
+				}				
+			});
 		}
 		#endregion
 
@@ -59,16 +58,16 @@ namespace System.Data.Unqlite.Tests.Unit
 			const string testkey = "testKey";
 			const string testValue = "testValue";
 
-			var unqliteDb = UnqliteDb.Create();
-			unqliteDb.Open(InMemoryDatabase, UnqliteOpenMode.CREATE);
+			string expectedValue = string.Empty;
+			using (var unqliteDb = new UnqliteDb())
+			{
+				unqliteDb.Open(InMemoryDatabase, UnqliteOpenMode.CREATE);
+				unqliteDb.SaveKeyValue(testkey, testValue);
+			
+				expectedValue = unqliteDb.GetKeyValue(testkey);
+			}
 
-			unqliteDb.SaveKeyValue(testkey, testValue);
-			
-			var expectedValue = unqliteDb.GetKeyValue(testkey);
-			
 			Assert.IsTrue(expectedValue == testValue);
-
-			unqliteDb.Close();
 		}
     }
 }
