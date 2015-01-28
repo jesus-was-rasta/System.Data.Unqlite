@@ -41,10 +41,27 @@ namespace System.Data.Unqlite.Tests.Unit
 
 
 		#region Key Value Store
-		[Test, MaxTimeAttribute(2000)]
-		public void UnqliteDb_KeyValue_Store()
+		[Test, MaxTimeAttribute(50)]
+		public void UnqliteDb_KeyValue_Store_1000_Items()
 		{
-			var itemsCount = 1000;
+			const int itemsCount = 1000;
+			var databaseFile = Path.GetTempFileName();
+
+			using (var unqliteDb = new UnqliteDb())
+			{
+				unqliteDb.Open(databaseFile, UnqliteOpenMode.CREATE);
+
+				for (int i = 0; i < itemsCount; i++)
+				{
+					unqliteDb.SaveKeyValue(i.ToString(), i.ToString());
+				}
+			}
+		}
+
+		[Test, MaxTimeAttribute(10000)]
+		public void UnqliteDb_KeyValue_Store_1000000_Items()
+		{
+			const int itemsCount = 1000000;
 			var databaseFile = Path.GetTempFileName();
 
 			using (var unqliteDb = new UnqliteDb())
