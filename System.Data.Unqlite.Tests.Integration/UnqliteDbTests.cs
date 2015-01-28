@@ -1,22 +1,17 @@
 ﻿#region Usings
 using System.IO;
-using System.Text;
-using System.Threading;
 
 using NUnit.Framework;
+
+
 #endregion
 
 
-namespace System.Data.Unqlite.Tests.Unit
+namespace System.Data.Unqlite.Tests.Integration
 {
 	[TestFixture, Category("Unit"), Description("UnqliteDb tests")]
 	public class UnqliteDbTests
 	{
-		#region Costants
-		private const string InMemoryDatabase = ":mem:";
-		#endregion
-
-
 		# region Setup and Tear Down
 		/// <summary>
 		/// SetsUp is called once before each Test within the same TestFxiture
@@ -41,7 +36,7 @@ namespace System.Data.Unqlite.Tests.Unit
 
 
 		#region Key Value Store
-		[Test, MaxTimeAttribute(50)]
+		[Test, MaxTime(50)]
 		public void UnqliteDb_KeyValue_Store_1000_Items()
 		{
 			const int itemsCount = 1000;
@@ -58,7 +53,7 @@ namespace System.Data.Unqlite.Tests.Unit
 			}
 		}
 
-		[Test, MaxTimeAttribute(10000)]
+		[Test, MaxTime(10000)]
 		public void UnqliteDb_KeyValue_Store_1000000_Items()
 		{
 			const int itemsCount = 1000000;
