@@ -125,7 +125,6 @@ namespace System.Data.Unqlite.Tests.Unit
 						cursor.Next();
 					}
 				}
-				db.Close();
 			}
 		}
 
@@ -148,7 +147,6 @@ namespace System.Data.Unqlite.Tests.Unit
 						cursor.Next();
 					}
 				}
-				unqliteDb.Close();
 			}
 		}
 
@@ -171,7 +169,6 @@ namespace System.Data.Unqlite.Tests.Unit
 						Assert.IsTrue(value == "hello world 1");
 					}
 				}
-				unqliteDb.Close();
 			}
 		}
 
@@ -194,7 +191,6 @@ namespace System.Data.Unqlite.Tests.Unit
 						Assert.IsTrue(value == "hello world 1");
 					}
 				}
-				unqliteDb.Close();
 			}
 		}
 
