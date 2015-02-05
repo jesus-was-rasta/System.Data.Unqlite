@@ -36,7 +36,7 @@ namespace System.Data.Unqlite.Tests.Integration
 
 
 		#region Key Value Store
-		[Test, MaxTime(50)]
+		[Test, MaxTime(100)]
 		public void UnqliteDb_KeyValue_Store_1000_Items()
 		{
 			const int itemsCount = 1000;
