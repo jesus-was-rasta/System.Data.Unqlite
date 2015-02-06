@@ -12,11 +12,7 @@ namespace System.Data.Unqlite.Interop
 	{
 		#region Fields
 		private bool _disposed;
-		#endregion
-
-
-		#region Properties
-		public IntPtr DbHandle { get; private set; }
+		private IntPtr _dbHandle;
 		#endregion
 
 
@@ -25,7 +21,7 @@ namespace System.Data.Unqlite.Interop
 		{
 			IntPtr handler = IntPtr.Zero;
 			int res = Libunqlite.unqlite_open(out handler, fileName, (int) iMode);
-			DbHandle = handler;
+			_dbHandle = handler;
 			return res == 0;
 		}
 
@@ -34,14 +30,14 @@ namespace System.Data.Unqlite.Interop
 			byte[] keyData = Encoding.UTF8.GetBytes(key);
 			byte[] data = Encoding.UTF8.GetBytes(value);
 
-			int res = Libunqlite.unqlite_kv_store(DbHandle, keyData, keyData.Length, data, (UInt64) data.Length);
+			int res = Libunqlite.unqlite_kv_store(_dbHandle, keyData, keyData.Length, data, (UInt64) data.Length);
 			return res == 0;
 		}
 
 		internal bool SaveKeyValue(string key, byte[] data)
 		{
 			byte[] keyData = Encoding.UTF8.GetBytes(key);
-			int res = Libunqlite.unqlite_kv_store(DbHandle, keyData, keyData.Length, data, (UInt64) data.Length);
+			int res = Libunqlite.unqlite_kv_store(_dbHandle, keyData, keyData.Length, data, (UInt64) data.Length);
 			return res == 0;
 		}
 
@@ -49,14 +45,14 @@ namespace System.Data.Unqlite.Interop
 		{
 			byte[] keyData = Encoding.UTF8.GetBytes(key);
 			byte[] data = Encoding.UTF8.GetBytes(value);
-			int res = Libunqlite.unqlite_kv_append(DbHandle, keyData, keyData.Length, data, (UInt64) data.Length);
+			int res = Libunqlite.unqlite_kv_append(_dbHandle, keyData, keyData.Length, data, (UInt64) data.Length);
 			return res == 0;
 		}
 
 		internal bool AppendKeyValue(string key, byte[] data)
 		{
 			byte[] keyData = Encoding.UTF8.GetBytes(key);
-			int res = Libunqlite.unqlite_kv_append(DbHandle, keyData, keyData.Length, data, (UInt64) data.Length);
+			int res = Libunqlite.unqlite_kv_append(_dbHandle, keyData, keyData.Length, data, (UInt64) data.Length);
 			return res == 0;
 		}
 
@@ -65,11 +61,11 @@ namespace System.Data.Unqlite.Interop
 			byte[] value = null;
 			UInt64 valueLength = 0;
 			byte[] keyData = Encoding.UTF8.GetBytes(key);
-			int res = Libunqlite.unqlite_kv_fetch(DbHandle, keyData, keyData.Length, null, out valueLength);
+			int res = Libunqlite.unqlite_kv_fetch(_dbHandle, keyData, keyData.Length, null, out valueLength);
 			if (res == 0)
 			{
 				value = new byte[valueLength];
-				Libunqlite.unqlite_kv_fetch(DbHandle, keyData, keyData.Length, value, out valueLength);
+				Libunqlite.unqlite_kv_fetch(_dbHandle, keyData, keyData.Length, value, out valueLength);
 			}
 			if (value != null)
 			{
@@ -83,11 +79,11 @@ namespace System.Data.Unqlite.Interop
 			byte[] value = null;
 			UInt64 valueLength = 0;
 			byte[] keyData = Encoding.UTF8.GetBytes(key);
-			int res = Libunqlite.unqlite_kv_fetch(DbHandle, keyData, keyData.Length, null, out valueLength);
+			int res = Libunqlite.unqlite_kv_fetch(_dbHandle, keyData, keyData.Length, null, out valueLength);
 			if (res == 0)
 			{
 				value = new byte[valueLength];
-				Libunqlite.unqlite_kv_fetch(DbHandle, keyData, keyData.Length, value, out valueLength);
+				Libunqlite.unqlite_kv_fetch(_dbHandle, keyData, keyData.Length, value, out valueLength);
 			}
 			if (value != null)
 			{
@@ -98,13 +94,13 @@ namespace System.Data.Unqlite.Interop
 
 		internal void Close()
 		{
-			Libunqlite.unqlite_close(DbHandle);
+			Libunqlite.unqlite_close(_dbHandle);
 		}
 
 		internal void GetKeyValue(string key, Action<string> action)
 		{
 			byte[] keyData = Encoding.UTF8.GetBytes(key);
-			Libunqlite.unqlite_kv_fetch_callback(DbHandle, keyData, keyData.Length,
+			Libunqlite.unqlite_kv_fetch_callback(_dbHandle, keyData, keyData.Length,
 				(dataPointer, dataLen, pUserData) =>
 				{
 					string value = Marshal.PtrToStringAnsi(dataPointer, (int) dataLen);
@@ -116,7 +112,7 @@ namespace System.Data.Unqlite.Interop
 		internal void GetKeyBinaryValue(string key, Action<byte[]> action)
 		{
 			byte[] keyData = Encoding.UTF8.GetBytes(key);
-			Libunqlite.unqlite_kv_fetch_callback(DbHandle, keyData, keyData.Length,
+			Libunqlite.unqlite_kv_fetch_callback(_dbHandle, keyData, keyData.Length,
 				(dataPointer, dataLen, pUserData) =>
 				{
 					byte[] buffer = new byte[dataLen];
@@ -128,7 +124,7 @@ namespace System.Data.Unqlite.Interop
 
 		internal bool InitKVCursor(out IntPtr cursor)
 		{
-			int res = Libunqlite.unqlite_kv_cursor_init(DbHandle, out cursor);
+			int res = Libunqlite.unqlite_kv_cursor_init(_dbHandle, out cursor);
 			return res == 0;
 		}
 
@@ -234,7 +230,7 @@ namespace System.Data.Unqlite.Interop
 
 		internal void ReleaseCursor(IntPtr cursor)
 		{
-			Libunqlite.unqlite_kv_cursor_release(DbHandle, cursor);
+			Libunqlite.unqlite_kv_cursor_release(_dbHandle, cursor);
 		}
 
 		internal void SeekKey(IntPtr cursor, string key, UnqliteCursorSeek seekMode)
@@ -255,7 +251,7 @@ namespace System.Data.Unqlite.Interop
 		private void Terminate()
 		{
 			//nando20150111: what the hell is this?
-			if (DbHandle == IntPtr.Zero)
+			if (_dbHandle == IntPtr.Zero)
 			{
 				return;
 			}
