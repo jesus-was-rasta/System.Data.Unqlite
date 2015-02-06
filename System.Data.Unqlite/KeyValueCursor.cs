@@ -10,11 +10,25 @@ namespace System.Data.Unqlite
 {
 	public class KeyValueCursor : IDisposable
 	{
+		#region Fields
 		private readonly UnqliteDbProxy _dbProxy;
 		private IntPtr _cursor;
+		#endregion
 
+
+		#region Properties
+		public bool Open { get; set; }
+		#endregion
+
+
+		#region Constructors
 		internal KeyValueCursor(UnqliteDbProxy dbProxy, bool forwardCursor)
 		{
+			if (dbProxy == null)
+			{
+				throw new ArgumentNullException("dbProxy");
+			}
+
 			_dbProxy = dbProxy;
 			bool success = dbProxy.InitKVCursor(out _cursor);
 			if (success)
@@ -27,16 +41,10 @@ namespace System.Data.Unqlite
 				Open = false;
 			}
 		}
+		#endregion
 
-		public bool Open { get; set; }
 
-		public void Dispose()
-		{
-			_dbProxy.ReleaseCursor(_cursor);
-			_cursor = IntPtr.Zero;
-			Open = false;
-		}
-
+		#region Public Methods
 		public bool Read()
 		{
 			return _dbProxy.KV_ValidEntry(_cursor);
@@ -94,12 +102,10 @@ namespace System.Data.Unqlite
 			_dbProxy.GetCursorValue(_cursor, action);
 		}
 
-
 		public void Seek(string key)
 		{
 			_dbProxy.SeekKey(_cursor, key, UnqliteCursorSeek.Match_Exact);
 		}
-
 
 		public void Seek(string key, UnqliteCursorSeek seekMode)
 		{
@@ -110,5 +116,17 @@ namespace System.Data.Unqlite
 		{
 			return _dbProxy.DeleteEntry(_cursor);
 		}
+		#endregion
+
+
+		#region Dispose
+		public void Dispose()
+		{
+			_dbProxy.ReleaseCursor(_cursor);
+			_cursor = IntPtr.Zero;
+			Open = false;
+		}
+		#endregion
+
 	}
 }
