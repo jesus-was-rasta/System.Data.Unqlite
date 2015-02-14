@@ -13,6 +13,3 @@ For more info about Unqlite check the official page: http://www.unqlite.org/
 
 [![Build status](https://ci.appveyor.com/api/projects/status/602qisa2f20tltv9?svg=true)](https://ci.appveyor.com/project/jesuswasrasta/system-data-unqlite)
 
-[![Build status](https://ci.appveyor.com/api/projects/status/602qisa2f20tltv9/branch/master?svg=true)](https://ci.appveyor.com/project/jesuswasrasta/system-data-unqlite/branch/master)
-
-
