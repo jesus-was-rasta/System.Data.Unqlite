@@ -117,7 +117,6 @@ namespace System.Data.Unqlite
 
 
 		#region Dispose
-
 		protected virtual void Dispose(bool disposing)
 		{
 			if (!_disposed)

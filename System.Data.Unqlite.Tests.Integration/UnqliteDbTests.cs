@@ -9,7 +9,7 @@ using NUnit.Framework;
 
 namespace System.Data.Unqlite.Tests.Integration
 {
-	[TestFixture, Category("Unit"), Description("UnqliteDb tests")]
+	[TestFixture, Category("Integration"), Description("UnqliteDb tests")]
 	public class UnqliteDbTests
 	{
 		# region Setup and Tear Down
